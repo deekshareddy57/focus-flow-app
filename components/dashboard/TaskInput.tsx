@@ -104,10 +104,10 @@ export const TaskInput = () => {
         </div>
       </form>
 
-      {/* Helper Text */}
-      <div className="text-center mt-3 text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-        Try typing: "Review Project asap" or "Gym for 1 hour"
-      </div>
+        {/* Helper Text */}
+        <div className="text-center mt-3 text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+            Try typing: &quot;Review Project asap&quot; or &quot;Gym for 1 hour&quot;
+        </div>
     </div>
   );
 };

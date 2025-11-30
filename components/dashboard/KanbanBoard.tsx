@@ -53,8 +53,7 @@ export const KanbanBoard = () => {
             id="in-progress" 
             title="In Flow" 
             count={columns["in-progress"].length} 
-            tasks={columns["in-progress"]}
-            isHighlight 
+            tasks={columns["in-progress"]} 
         />
 
         {/* COLUMN 3: DONE */}
@@ -72,7 +71,7 @@ export const KanbanBoard = () => {
 
 // Helper Component for Columns to keep code clean
 // Helper Component for Columns
-const Column = ({ id, title, count, tasks, isHighlight }: any) => {
+const Column = ({ id, title, count, tasks }: { id: string; title: string; count: number; tasks: Task[] }) => {
   return (
     <div className={cn(
         "flex flex-col rounded-xl p-4 transition-colors border h-full",

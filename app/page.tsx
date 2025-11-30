@@ -6,7 +6,6 @@ import { DailyStats } from "@/components/dashboard/DailyStats";
 import { Negotiator } from "@/components/negotiation/Negotiator";
 import { FocusMode } from "@/components/dashboard/FocusMode";
 
-import { useState } from "react";
 // We will import our components here later
 // import { AnalyticsPanel } from "@/components/dashboard/AnalyticsPanel";
 
