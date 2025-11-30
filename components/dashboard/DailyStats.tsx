@@ -1,7 +1,7 @@
 "use client";
 
 import { useTaskStore } from "@/store/useTaskStore";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, Tooltip } from "recharts"; // REMOVED ResponsiveContainer
 import { Trophy, Flame, Target } from "lucide-react";
 
 export const DailyStats = () => {
@@ -25,9 +25,9 @@ export const DailyStats = () => {
       <div className="flex items-center justify-between">
         
         {/* LEFT: The Donut Chart */}
-        <div className="h-32 w-32 relative">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+        <div className="h-32 w-32 relative flex items-center justify-center">
+            {/* FIX: Hardcode the size to 128px (matching h-32/w-32) to prevent build error */}
+            <PieChart width={128} height={128}>
               <Pie
                 data={data}
                 cx="50%"
@@ -45,7 +45,6 @@ export const DailyStats = () => {
               </Pie>
               <Tooltip />
             </PieChart>
-          </ResponsiveContainer>
           
           {/* Centered Text inside Donut */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
