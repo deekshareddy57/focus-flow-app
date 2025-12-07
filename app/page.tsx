@@ -1,53 +1,87 @@
-// app/page.tsx
 "use client";
-import { KanbanBoard } from "@/components/dashboard/KanbanBoard";
+
+import { useState } from "react";
 import { TaskInput } from "@/components/dashboard/TaskInput";
+import { KanbanBoard } from "@/components/dashboard/KanbanBoard";
 import { DailyStats } from "@/components/dashboard/DailyStats";
 import { Negotiator } from "@/components/negotiation/Negotiator";
 import { FocusMode } from "@/components/dashboard/FocusMode";
+import { WeeklyView } from "@/components/dashboard/WeeklyView";
+import { LayoutGrid, Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-// We will import our components here later
-// import { AnalyticsPanel } from "@/components/dashboard/AnalyticsPanel";
+// REMOVED: import { SignInButton... } from '@clerk/nextjs'; (We don't need this yet)
 
 export default function Home() {
+  const [view, setView] = useState<'planner' | 'weekly'>('planner');
+
   return (
     <main className="min-h-screen bg-slate-50 p-8 font-sans text-slate-900">
-      {/* 1. THE HEADER (Input Area) */}
-      <header className="mx-auto max-w-5xl mb-12">
+
+      {/* TOP NAVIGATION BAR */}
+      <div className="mx-auto max-w-7xl flex justify-between items-center mb-8">
+        <div className="flex items-center gap-2">
+          {/* Logo placeholder */}
+        </div>
+
+        {/* VIEW SWITCHER */}
+        <div className="bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
+          <button
+            onClick={() => setView('planner')}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+              view === 'planner' ? "bg-slate-100 text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            )}
+          >
+            <LayoutGrid className="h-4 w-4" />
+            Planner
+          </button>
+          <button
+            onClick={() => setView('weekly')}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+              view === 'weekly' ? "bg-slate-100 text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            )}
+          >
+            <CalendarIcon className="h-4 w-4" />
+            Weekly
+          </button>
+        </div>
+      </div>
+
+      {/* HEADER (Input Area) */}
+      <header className="mx-auto max-w-5xl mb-12 relative">
+        {/* REMOVED: Login Buttons Section */}
+
         <div className="flex flex-col items-center justify-center space-y-4">
           <h1 className="text-3xl font-bold tracking-tight text-slate-800">
             FocusFlow
           </h1>
           <p className="text-slate-500">What is on your mind?</p>
-          
-          {/* Placeholder for the AI Input Component */}
           <TaskInput />
         </div>
       </header>
 
-      {/* 2. THE MAIN WORKSPACE (Grid Layout) */}
+      {/* MAIN WORKSPACE */}
       <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
-        {/* Left: Kanban Board (Takes up 3 columns) */}
+
+        {/* LEFT: Main Content (Switches between Kanban and Weekly) */}
         <div className="lg:col-span-3 space-y-6">
-        <KanbanBoard />
+          {view === 'planner' ? (
+            <KanbanBoard />
+          ) : (
+            <WeeklyView />
+          )}
         </div>
 
-        {/* Right: Analytics Sidebar (Takes up 1 column) */}
+        {/* RIGHT: Analytics Sidebar (Always visible) */}
         <div className="space-y-6">
-          {/* <div className="h-64 w-full rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center text-slate-400">
-            Daily Stats Placeholder
-          </div>
-          
-          <div className="h-40 w-full rounded-xl border border-orange-100 bg-orange-50 flex items-center justify-center text-orange-400">
-            Negotiator Alert Placeholder
-          </div>*/}
           <DailyStats />
           <Negotiator />
-          {/* Future Component: Analytics Panel */}
-          {/* <AnalyticsPanel /> */}
         </div>
+
       </div>
+
       <FocusMode />
     </main>
   );

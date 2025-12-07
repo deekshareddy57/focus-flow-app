@@ -16,51 +16,75 @@ export const TaskInput = () => {
 
     setIsProcessing(true);
 
+    // Simulate thinking delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     // ---------------------------------------------------------
-    // 🧠 MOCK AI LOGIC (will replace this with OpenAI later)
-    // This allows me to test the UX immediately without an API Key.
+    // 🧠 MULTI-TASK PARSING LOGIC (v2)
     // ---------------------------------------------------------
     
-    // Simulate thinking delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // 1. Split by separators: "and", "then", ",", ";"
+    // The Regex looks for:
+    // \s+(?:and|then)\s+  -> " and " or " then " (with spaces)
+    // ,\s* -> "," followed by optional space
+    // \s*;\s* -> ";" with optional spaces
+    const segments = input.split(/\s+(?:and|then)\s+|,\s*|\s*;\s*/i).filter(s => s.trim().length > 0);
 
-    // Simple keyword detection to simulate "Intelligence"
-    const lowerInput = input.toLowerCase();
-    let category: Task['category'] = 'work';
-    let priority: Task['priority'] = 'medium';
-    let estimatedTime = 30; //default 30 mins
+    segments.forEach(segment => {
+        let titleToClean = segment.trim();
+        const lowerSegment = titleToClean.toLowerCase();
+        
+        // Defaults
+        let category: Task['category'] = 'work';
+        let priority: Task['priority'] = 'medium';
+        let estimatedTime = 30; 
 
-    const minMatch = lowerInput.match(/(\d+)\s*(min|mins|m|mi)/);
-    if (minMatch) {
-        estimatedTime = parseInt(minMatch[1]);
-    }
+        // 2. Extract & Remove Time from Title
+        // Regex matches: optional "for ", number, space, units (min/hour)
+        const timeRegex = /(?:for\s+)?(\d+)\s*(min|m|mins|hour|h|hours)/i;
+        const timeMatch = titleToClean.match(timeRegex);
+        
+        if (timeMatch) {
+            const value = parseInt(timeMatch[1]);
+            const unit = timeMatch[2].toLowerCase();
+            
+            // Convert to minutes
+            if (unit.startsWith('h')) {
+                estimatedTime = value * 60;
+            } else {
+                estimatedTime = value;
+            }
+            
+            // Remove the matched time string from the title (e.g. remove "for 1 hour")
+            titleToClean = titleToClean.replace(timeMatch[0], "").trim();
+        }
 
-    const hourMatch = lowerInput.match(/(\d+)\s*(hour|hours|h)/);
-    if (hourMatch) {
-        estimatedTime = parseInt(hourMatch[1]) * 60;
-    }
+        // 3. Category Logic
+        if (lowerSegment.includes("study") || lowerSegment.includes("read") || lowerSegment.includes("exam")) category = 'study';
+        if (lowerSegment.includes("gym") || lowerSegment.includes("workout") || lowerSegment.includes("walk")) category = 'health';
+        if (lowerSegment.includes("mom") || lowerSegment.includes("call") || lowerSegment.includes("groceries")) category = 'personal';
 
-    if (lowerInput.includes("study") || lowerInput.includes("read")) category = 'study';
-    if (lowerInput.includes("gym") || lowerInput.includes("walk")) category = 'health';
-    if (lowerInput.includes("mom") || lowerInput.includes("call") || lowerInput.includes("groceries")) category = 'personal';
-    if (lowerInput.includes("work") || lowerInput.includes("project") || lowerInput.includes("meeting")) category = 'work';
+        // 4. Priority Logic
+        if (lowerSegment.includes("urgent") || lowerSegment.includes("asap") || lowerSegment.includes("deadline")) priority = 'high';
+        if (lowerSegment.includes("later") || lowerSegment.includes("whenever")) priority = 'low';
 
-    if (lowerInput.includes("urgent") || lowerInput.includes("asap")) priority = 'high';
-    if (lowerInput.includes("later") || lowerInput.includes("whenever")) priority = 'low';
-    if (lowerInput.includes("quick")) estimatedTime = 15;
+        // 5. Final Cleanup
+        // Remove trailing punctuation or double spaces
+        titleToClean = titleToClean.replace(/\s+/g, " ").replace(/[.,;]+$/, "").trim();
 
-    const newTask: Task = {
-      //id: crypto.randomUUID(), // Generates a unique ID
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // Simple unique ID to make it accessible in all environments
-      title: input, // In the real AI version, this would be cleaned up
-      status: 'todo',
-      priority: priority,
-      estimatedTime: estimatedTime,
-      category: category,
-      createdAt: new Date().toISOString()
-    };
+        const newTask: Task = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            title: titleToClean, // Now clean!
+            status: 'todo',
+            priority: priority,
+            estimatedTime: estimatedTime,
+            category: category,
+            createdAt: new Date().toISOString()
+        };
 
-    addTask(newTask);
+        addTask(newTask);
+    });
+
     setInput("");
     setIsProcessing(false);
   };
@@ -74,7 +98,6 @@ export const TaskInput = () => {
         
         <div className="relative flex items-center bg-white rounded-full shadow-lg border border-slate-100 p-2 transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transform focus-within:scale-[1.01]">
           
-          {/* Icon */}
           <div className="pl-4 pr-3 text-slate-400">
             {isProcessing ? (
               <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
@@ -83,17 +106,15 @@ export const TaskInput = () => {
             )}
           </div>
 
-          {/* Input Field */}
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Describe your tasks... (e.g. 'Study HCI for 45 mins')"
+            placeholder="Describe tasks... (e.g. 'Gym for 1h then Study')"
             className="flex-1 bg-transparent border-none outline-none text-slate-700 placeholder:text-slate-400 h-10 text-base"
             disabled={isProcessing}
           />
 
-          {/* Submit Button */}
           <button 
             type="submit"
             disabled={!input.trim() || isProcessing}
@@ -104,10 +125,9 @@ export const TaskInput = () => {
         </div>
       </form>
 
-        {/* Helper Text */}
-        <div className="text-center mt-3 text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            Try typing: &quot;Review Project asap&quot; or &quot;Gym for 1 hour&quot;
-        </div>
+      <div className="text-center mt-3 text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+        Try: &quot;Email boss, then Gym for 90 mins, then Read for 1 hour&quot;
+      </div>
     </div>
   );
 };
