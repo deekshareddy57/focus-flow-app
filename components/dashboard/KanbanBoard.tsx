@@ -10,78 +10,113 @@ import { Task } from "@/types";
 export const KanbanBoard = () => {
   const { tasks, updateTaskStatus } = useTaskStore();
   const [isMounted, setIsMounted] = useState(false);
+  
+  // NEW: Filter State
+  const [filter, setFilter] = useState<Task['category'] | 'all'>('all');
 
-  // Fix for hydration errors with Drag and Drop in Next.js
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   const onDragEnd = (result: DropResult) => {
     const { destination, draggableId } = result;
-
     if (!destination) return;
-    
-    // If dropped in a different column, update status in the store
     if (destination.droppableId !== result.source.droppableId) {
        updateTaskStatus(draggableId, destination.droppableId as Task['status']);
     }
   };
 
-  if (!isMounted) return null; // Prevent server-render mismatch
+  if (!isMounted) return null; 
 
-  // Filter tasks by status
+  // 1. FILTER LOGIC
+  const filteredTasks = tasks.filter(t => 
+    filter === 'all' ? true : t.category === filter
+  );
+
+  // 2. COLUMN GROUPING (Using filtered tasks)
   const columns = {
-    todo: tasks.filter((t) => t.status === "todo"),
-    "in-progress": tasks.filter((t) => t.status === "in-progress"),
-    done: tasks.filter((t) => t.status === "done"),
+    todo: filteredTasks.filter((t) => t.status === "todo"),
+    "in-progress": filteredTasks.filter((t) => t.status === "in-progress"),
+    done: filteredTasks.filter((t) => t.status === "done"),
   };
 
+  // Filter Options for the UI
+  const categories: { id: string, label: string}[] = [
+    { id: 'all', label: 'All' },
+    { id: 'work', label: 'Work' },
+    { id: 'study', label: 'Study' },
+    { id: 'career', label: 'Career' },
+    { id: 'personal', label: 'Personal' },
+    { id: 'health', label: 'Health' },
+  ];
+
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full min-h-[500px]">
-        
-        {/* COLUMN 1: ON DECK */}
-        <Column 
-            id="todo" 
-            title="On Deck" 
-            count={columns.todo.length} 
-            tasks={columns.todo} 
-        />
+    <div>
+        {/* NEW: FILTER BAR */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
+            {categories.map((cat) => (
+                <button
+                    key={cat.id}
+                    onClick={() => setFilter(cat.id as any)}
+                    className={cn(
+                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap",
+                        filter === cat.id 
+                            ? "bg-slate-800 text-white border-slate-800" 
+                            : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                    )}
+                >
+                    {cat.label}
+                    <span className="ml-2 opacity-60">
+                         {/* Show count of tasks in this category */}
+                        {cat.id === 'all' 
+                            ? tasks.length 
+                            : tasks.filter(t => t.category === cat.id).length}
+                    </span>
+                </button>
+            ))}
+        </div>
 
-        {/* COLUMN 2: IN FLOW (The Highlight) */}
-        <Column 
-            id="in-progress" 
-            title="In Flow" 
-            count={columns["in-progress"].length} 
-            tasks={columns["in-progress"]} 
-        />
+        {/* BOARD */}
+        <DragDropContext onDragEnd={onDragEnd}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full min-h-[500px]">
+                
+                {/* COLUMN 1: ON DECK */}
+                <Column 
+                    id="todo" 
+                    title="On Deck" 
+                    count={columns.todo.length} 
+                    tasks={columns.todo} 
+                />
 
-        {/* COLUMN 3: DONE */}
-        <Column 
-            id="done" 
-            title="Completed" 
-            count={columns.done.length} 
-            tasks={columns.done} 
-        />
-        
-      </div>
-    </DragDropContext>
+                {/* COLUMN 2: IN FLOW */}
+                <Column 
+                    id="in-progress" 
+                    title="In Flow" 
+                    count={columns["in-progress"].length} 
+                    tasks={columns["in-progress"]} 
+                />
+
+                {/* COLUMN 3: COMPLETED */}
+                <Column 
+                    id="done" 
+                    title="Completed" 
+                    count={columns.done.length} 
+                    tasks={columns.done} 
+                />
+                
+            </div>
+        </DragDropContext>
+    </div>
   );
 };
 
-// Helper Component for Columns to keep code clean
 // Helper Component for Columns
 const Column = ({ id, title, count, tasks }: { id: string; title: string; count: number; tasks: Task[] }) => {
   return (
     <div className={cn(
         "flex flex-col rounded-xl p-4 transition-colors border h-full",
-        // 1. "On Deck" -> Crisp White with Shadow
         id === "todo" && "bg-white border-slate-200 shadow-sm",
-        
-        // 2. "In Flow" -> Soft Blue (unchanged)
         id === "in-progress" && "bg-blue-50 border-blue-200 shadow-inner",
-        
-        // 3. "Completed" -> Very subtle Green/Slate tint
         id === "done" && "bg-emerald-50/50 border-emerald-100/50"
     )}>
       <div className="flex items-center justify-between mb-4">
@@ -106,7 +141,6 @@ const Column = ({ id, title, count, tasks }: { id: string; title: string; count:
             ref={provided.innerRef}
             className={cn(
                 "flex-1 rounded-lg transition-colors min-h-[150px]",
-                // Add a subtle highlight when you drag OVER the column
                 snapshot.isDraggingOver ? "bg-slate-50 ring-2 ring-slate-200" : ""
             )}
           >
