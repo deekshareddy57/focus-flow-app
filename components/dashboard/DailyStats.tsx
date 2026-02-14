@@ -24,7 +24,7 @@ export const DailyStats = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 h-full flex flex-col justify-between">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between">
       <h3 className="text-slate-500 text-sm font-medium mb-2">Daily Focus</h3>
 
       <div className="flex items-center gap-4">
