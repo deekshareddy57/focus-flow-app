@@ -9,7 +9,7 @@ export type Task = {
   priority: Priority;
   estimatedTime: number; // in minutes
   createdAt: string; // ISO date string
-  category?: 'work' | 'personal' | 'study' | 'health';
+  category?: 'work' | 'personal' | 'study' | 'health' | 'career';
 };
 
 export type UserStats = {
